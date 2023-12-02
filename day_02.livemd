@@ -1,0 +1,107 @@
+<!-- livebook:{"file_entries":[{"name":"day_02.txt","type":"attachment"}]} -->
+
+# Advent of Code 2023: Day 2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Part 1
+
+Advent of Code 2023 - [Day 2](https://adventofcode.com/2023/day/2)
+
+```elixir
+part_1_example = """
+Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+"""
+
+part_1_solution = 8
+part_2_solution = 2286
+```
+
+```elixir
+defmodule CubeGame.Part1 do
+  def main(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(&parse_game/1)
+    |> Enum.filter(fn {_, draws} -> Enum.all?(draws) end)
+    |> Enum.map(fn {x, _} -> x end)
+    |> Enum.sum()
+  end
+
+  def parse_game("Game " <> rest) do
+    [id, draws] = String.split(rest, ":", trim: true)
+
+    draws =
+      draws
+      |> String.split(";", trim: true)
+      |> Enum.map(fn str ->
+        str
+        |> String.split(",")
+        |> Enum.map(fn s ->
+          s |> String.split(" ", trim: true) |> is_valid?()
+        end)
+      end)
+      |> List.flatten()
+
+    {String.to_integer(id), draws}
+  end
+
+  def is_valid?([count, "blue"]), do: String.to_integer(count) <= 14
+  def is_valid?([count, "red"]), do: String.to_integer(count) <= 12
+  def is_valid?([count, "green"]), do: String.to_integer(count) <= 13
+end
+```
+
+```elixir
+"day_02.txt"
+|> Kino.FS.file_path()
+|> File.read!()
+|> CubeGame.Part1.main()
+```
+
+## Part 2
+
+```elixir
+defmodule CubeGame.Part2 do
+  def main(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(&parse_game/1)
+    |> Enum.sum()
+  end
+
+  def parse_game("Game " <> rest) do
+    [_id, draws] = String.split(rest, ":", trim: true)
+
+    draws
+    |> String.split(";", trim: true)
+    |> Enum.map(fn str ->
+      str
+      |> String.split(",")
+      |> Enum.map(fn s ->
+        [count, color] = s |> String.split(" ", trim: true)
+        {color, String.to_integer(count)}
+      end)
+    end)
+    |> List.flatten()
+    |> Enum.group_by(fn {x, _} -> x end, fn {_, y} -> y end)
+    |> Enum.map(fn {_, counts} -> Enum.max(counts) end)
+    |> Enum.product()
+  end
+end
+```
+
+```elixir
+"day_02.txt"
+|> Kino.FS.file_path()
+|> File.read!()
+|> CubeGame.Part2.main()
+```
